@@ -1,37 +1,6 @@
-//
-//  OTPFieldView.swift
-//  OTPFieldView
-//
-//  Created by Vaibhav Bhasin on 10/09/19.
-//  Copyright © 2019 Vaibhav Bhasin. All rights reserved.
-//
-
-//    MIT License
-//
-//    Copyright (c) 2019 Vaibhav Bhasin
-//
-//    Permission is hereby granted, free of charge, to any person obtaining a copy
-//    of this software and associated documentation files (the "Software"), to deal
-//    in the Software without restriction, including without limitation the rights
-//    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//    copies of the Software, and to permit persons to whom the Software is
-//    furnished to do so, subject to the following conditions:
-//
-//    The above copyright notice and this permission notice shall be included in all
-//    copies or substantial portions of the Software.
-//
-//    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//    SOFTWARE.
-
 import UIKit
 
 @objc public protocol OTPFieldViewDelegate {
-    
     func shouldBecomeFirstResponderForOTP(otpTextFieldIndex index: Int) -> Bool
     func enteredOTP(otp: String)
     func hasEnteredAllOTP(hasEnteredAll: Bool) -> Bool
@@ -45,7 +14,6 @@ import UIKit
     case underlinedBottom
 }
 
-/// Different input type for OTP fields.
 @objc public enum KeyboardType: Int {
     case numeric
     case alphabet
@@ -54,21 +22,16 @@ import UIKit
 
 @objc public class OTPFieldView: UIView {
     
-    /// Different display type for text fields.
-    
-    
-    public var displayType: DisplayType = .circular
-    public var fieldsCount: Int = 4
+    public var displayType: DisplayType = .roundedCorner
     public var otpInputType: KeyboardType = .numeric
-    public var fieldFont: UIFont = UIFont.systemFont(ofSize: 20)
+    public var fieldFont: UIFont = UIFont.systemFont(ofSize: 25)
     public var secureEntry: Bool = false
     public var hideEnteredText: Bool = false
     public var requireCursor: Bool = true
     public var cursorColor: UIColor = UIColor.blue
-    public var fieldSize: CGFloat = 60
-    public var separatorSpace: CGFloat = 16
-    public var fieldBorderWidth: CGFloat = 1
-    public var fieldBorderRadius: CGFloat = 18
+    public var fieldSize: CGFloat = 50
+    public var fieldBorderWidth: CGFloat = 2
+    public var fieldBorderRadius: CGFloat = 10
     public var shouldAllowIntermediateEditing: Bool = true
     public var defaultBackgroundColor: UIColor = UIColor.clear
     public var filledBackgroundColor: UIColor = UIColor.clear
@@ -80,8 +43,15 @@ import UIKit
     
     fileprivate var secureEntryData = [String]()
     
+    public var fieldsCount: Int = 4 {
+        didSet {
+            initializeUI()
+        }
+    }
+    
     override public func awakeFromNib() {
         super.awakeFromNib()
+        initializeUI()
     }
     
     public func initializeUI() {
@@ -111,26 +81,23 @@ import UIKit
     }
     
     fileprivate func getOTPField(forIndex index: Int) -> OTPTextField {
-        let hasOddNumberOfFields = (fieldsCount % 2 == 1)
-        var fieldFrame = CGRect(x: 0, y: 0, width: fieldSize + 8, height: fieldSize)
+        let totalFieldWidth = fieldSize + 8
+        let totalFieldsWidth = totalFieldWidth * CGFloat(fieldsCount)
+        let remainingSpace = bounds.size.width - totalFieldsWidth
+        let separatorSpace = remainingSpace / CGFloat(fieldsCount - 1)
         
-        if hasOddNumberOfFields {
-            // Calculate from middle each fields x and y values so as to align the entire view in center
-            fieldFrame.origin.x = bounds.size.width / 2 - (CGFloat(fieldsCount / 2 - index) * (fieldSize + separatorSpace) + fieldSize / 2)
-        }
-        else {
-            // Calculate from middle each fields x and y values so as to align the entire view in center
-            fieldFrame.origin.x = bounds.size.width / 2 - (CGFloat(fieldsCount / 2 - index) * fieldSize + CGFloat(fieldsCount / 2 - index - 1) * separatorSpace + separatorSpace / 2)
-        }
-        
-        fieldFrame.origin.y = (bounds.size.height - fieldSize) / 2
+        let fieldFrame = CGRect(
+            x: CGFloat(index) * (totalFieldWidth + separatorSpace),
+            y: (bounds.size.height - fieldSize) / 2,
+            width: totalFieldWidth,
+            height: fieldSize
+        )
         
         let otpField = OTPTextField(frame: fieldFrame)
         otpField.delegate = self
         otpField.tag = index + 1
         otpField.font = fieldFont
         
-        // Set input type for OTP fields
         switch otpInputType {
         case .numeric:
             otpField.keyboardType = .numberPad
@@ -140,22 +107,12 @@ import UIKit
             otpField.keyboardType = .namePhonePad
         }
         
-        // Set the border values if needed
         otpField.otpBorderColor = defaultBorderColor
         otpField.otpBorderWidth = fieldBorderWidth
         
-        if requireCursor {
-            otpField.tintColor = cursorColor
-        }
-        else {
-            otpField.tintColor = UIColor.clear
-        }
-        
-        // Set the default background color when text not set
+        otpField.tintColor = requireCursor ? cursorColor : UIColor.clear
         otpField.backgroundColor = defaultBackgroundColor
-        
-        // Finally create the fields
-        otpField.initalizeUI(forFieldType: displayType,forFieldRadius: fieldBorderRadius)
+        otpField.initalizeUI(forFieldType: displayType, forFieldRadius: fieldBorderRadius)
         
         return otpField
     }
@@ -164,14 +121,12 @@ import UIKit
         var isTextFilled = true
         var nextOTPField: UITextField?
         
-        // If intermediate editing is not allowed, then check for last filled field in forward direction.
         if !shouldAllowIntermediateEditing {
             for index in stride(from: 1, to: fieldsCount + 1, by: 1) {
                 let tempNextOTPField = viewWithTag(index) as? UITextField
                 
                 if let tempNextOTPFieldText = tempNextOTPField?.text, tempNextOTPFieldText.isEmpty {
                     nextOTPField = tempNextOTPField
-                    
                     break
                 }
             }
@@ -184,12 +139,10 @@ import UIKit
         return isTextFilled
     }
     
-    // Helper function to get the OTP String entered
-    fileprivate func calculateEnteredOTPSTring(isDeleted: Bool) {
+    fileprivate func calculateEnteredOTPString(isDeleted: Bool) {
         if isDeleted {
             _ = delegate?.hasEnteredAllOTP(hasEnteredAll: false)
             
-            // Set the default enteres state for otp entry
             for index in stride(from: 0, to: fieldsCount, by: 1) {
                 var otpField = viewWithTag(index + 1) as? OTPTextField
                 
@@ -208,11 +161,9 @@ import UIKit
                     otpField?.layer.borderColor = fieldBorderColor.cgColor
                 }
             }
-        }
-        else {
+        } else {
             var enteredOTPString = ""
             
-            // Check for entered OTP
             for index in stride(from: 0, to: secureEntryData.count, by: 1) {
                 if !secureEntryData[index].isEmpty {
                     enteredOTPString.append(secureEntryData[index])
@@ -222,10 +173,8 @@ import UIKit
             if enteredOTPString.count == fieldsCount {
                 delegate?.enteredOTP(otp: enteredOTPString)
                 
-                // Check if all OTP fields have been filled or not. Based on that call the 2 delegate methods.
                 let isValid = delegate?.hasEnteredAllOTP(hasEnteredAll: (enteredOTPString.count == fieldsCount)) ?? false
                 
-                // Set the error state for invalid otp entry
                 for index in stride(from: 0, to: fieldsCount, by: 1) {
                     var otpField = viewWithTag(index + 1) as? OTPTextField
                     
@@ -234,17 +183,14 @@ import UIKit
                     }
                     
                     if !isValid {
-                        // Set error border color if set, if not, set default border color
                         otpField?.layer.borderColor = (errorBorderColor ?? filledBorderColor).cgColor
-                    }
-                    else {
+                    } else {
                         otpField?.layer.borderColor = filledBorderColor.cgColor
                     }
                 }
             }
         }
     }
-    
 }
 
 extension OTPFieldView: UITextFieldDelegate {
@@ -261,48 +207,31 @@ extension OTPFieldView: UITextFieldDelegate {
     public func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         let replacedText = (textField.text as NSString?)?.replacingCharacters(in: range, with: string) ?? ""
         
-        // Check since only alphabet keyboard is not available in iOS
         if !replacedText.isEmpty && otpInputType == .alphabet && replacedText.rangeOfCharacter(from: .letters) == nil {
             return false
         }
-        // Ignore alphabet characters when the keyboard type is numeric
-        if !replacedText.isEmpty && otpInputType == .numeric && replacedText.rangeOfCharacter(from: .letters) != nil {
+        if !replacedText.isEmpty && otpInputType == .numeric && replacedText.rangeOfCharacter(from: .decimalDigits) == nil {
             return false
         }
-        // When the pasted string matched fieldsCount then populate all characters into the OTP field
-        if string.count == fieldsCount {
-            for index in stride(from: 0, to: fieldsCount, by: 1) {
-                let text = String(string[index])
-                secureEntryData[index] = text
-                var otpField = viewWithTag(index + 1) as? OTPTextField
-                
-                if otpField == nil {
-                    otpField = getOTPField(forIndex: index)
-                }
-                fill(otpField, with: text)
-            }
-            textField.resignFirstResponder()
-            calculateEnteredOTPSTring(isDeleted: false)
+        if !replacedText.isEmpty && otpInputType == .alphaNumeric && replacedText.rangeOfCharacter(from: .alphanumerics) == nil {
             return false
         }
         
-        if replacedText.count >= 1 {
-            // Only accept one character each time
-            guard string.count == 1 else { return false }
-            // If field has a text already, then replace the text and move to next field if present
-            secureEntryData[textField.tag - 1] = string
-            
-            fill(textField, with: string)
-            
-            if displayType == .diamond || displayType == .underlinedBottom {
-                (textField as! OTPTextField).shapeLayer.fillColor = filledBackgroundColor.cgColor
-                (textField as! OTPTextField).shapeLayer.strokeColor = filledBorderColor.cgColor
+        if (replacedText.count) >= 1 {
+            if secureEntry {
+                let index = (textField.tag - 1)
+                if secureEntryData.count >= index {
+                    secureEntryData[textField.tag - 1] = string
+                } else {
+                    secureEntryData.append(string)
+                }
+                
+                textField.text = hideEnteredText ? "●" : string
             } else {
-                textField.backgroundColor = filledBackgroundColor
-                textField.layer.borderColor = filledBorderColor.cgColor
+                textField.text = string
             }
             
-            let nextOTPField = viewWithTag(textField.tag + 1)
+            let nextOTPField = viewWithTag((textField.tag + 1)) as? UITextField
             
             if let nextOTPField = nextOTPField {
                 nextOTPField.becomeFirstResponder()
@@ -310,64 +239,39 @@ extension OTPFieldView: UITextFieldDelegate {
                 textField.resignFirstResponder()
             }
             
-            // Get the entered string
-            calculateEnteredOTPSTring(isDeleted: false)
-        } else {
-            let currentText = textField.text ?? ""
+            calculateEnteredOTPString(isDeleted: false)
             
-            if textField.tag > 1 && currentText.isEmpty {
-                if let prevOTPField = viewWithTag(textField.tag - 1) as? UITextField {
-                    deleteText(in: prevOTPField)
-                }
-            } else {
-                deleteText(in: textField)
-                
-                if textField.tag > 1 {
-                    if let prevOTPField = viewWithTag(textField.tag - 1) as? UITextField {
-                        prevOTPField.becomeFirstResponder()
-                    }
-                }
+            return false
+        } else if (replacedText.count) == 0 {
+            let previousOTPField = viewWithTag((textField.tag - 1)) as? UITextField
+            textField.text = ""
+            
+            if secureEntry && (textField.tag - 1) < secureEntryData.count {
+                secureEntryData[textField.tag - 1] = ""
             }
+            
+            if let previousOTPField = previousOTPField {
+                previousOTPField.becomeFirstResponder()
+            }
+            
+            calculateEnteredOTPString(isDeleted: true)
+            
+            return false
         }
         
-        return false
+        return true
     }
     
-    private func deleteText(in textField: UITextField) {
-        // If deleting the text, then move to previous text field if present
-        secureEntryData[textField.tag - 1] = ""
-        textField.text = ""
+    public func textFieldDidEndEditing(_ textField: UITextField) {
+        let textFieldTag = textField.tag
         
         if displayType == .diamond || displayType == .underlinedBottom {
-            (textField as! OTPTextField).shapeLayer.fillColor = defaultBackgroundColor.cgColor
-            (textField as! OTPTextField).shapeLayer.strokeColor = defaultBorderColor.cgColor
-        } else {
-            textField.backgroundColor = defaultBackgroundColor
-            textField.layer.borderColor = defaultBorderColor.cgColor
+            let fieldBackgroundColor = (textField.text ?? "").isEmpty ? defaultBackgroundColor : filledBackgroundColor
+            let fieldBorderColor = (textField.text ?? "").isEmpty ? defaultBorderColor : filledBorderColor
+            
+            let otpField = textField as? OTPTextField
+            otpField?.shapeLayer.fillColor = fieldBackgroundColor.cgColor
+            otpField?.shapeLayer.strokeColor = fieldBorderColor.cgColor
         }
-        
-        textField.becomeFirstResponder()
-        
-        // Get the entered string
-        calculateEnteredOTPSTring(isDeleted: true)
-    }
-    
-    private func fill(_ textField: UITextField?, with text: String) {
-        if hideEnteredText {
-            textField?.text = " "
-        } else {
-            if secureEntry {
-                textField?.text = "•"
-            } else {
-                textField?.text = text
-            }
-        }
-    }
-}
-
-extension StringProtocol {
-    
-    subscript(_ offset: Int) -> Element {
-        self[index(startIndex, offsetBy: offset)]
     }
 }
