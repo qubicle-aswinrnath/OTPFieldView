@@ -30,7 +30,7 @@
 
 import UIKit
 
-@objc public protocol OTPFieldViewDelegate: class {
+@objc public protocol OTPFieldViewDelegate {
     
     func shouldBecomeFirstResponderForOTP(otpTextFieldIndex index: Int) -> Bool
     func enteredOTP(otp: String)
