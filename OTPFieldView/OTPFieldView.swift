@@ -68,6 +68,7 @@ import UIKit
     public var fieldSize: CGFloat = 60
     public var separatorSpace: CGFloat = 16
     public var fieldBorderWidth: CGFloat = 1
+    public var fieldBorderRadius: CGFloat = 18
     public var shouldAllowIntermediateEditing: Bool = true
     public var defaultBackgroundColor: UIColor = UIColor.clear
     public var filledBackgroundColor: UIColor = UIColor.clear
@@ -111,7 +112,7 @@ import UIKit
     
     fileprivate func getOTPField(forIndex index: Int) -> OTPTextField {
         let hasOddNumberOfFields = (fieldsCount % 2 == 1)
-        var fieldFrame = CGRect(x: 0, y: 0, width: fieldSize, height: fieldSize)
+        var fieldFrame = CGRect(x: 0, y: 0, width: fieldSize + 8, height: fieldSize)
         
         if hasOddNumberOfFields {
             // Calculate from middle each fields x and y values so as to align the entire view in center
@@ -154,7 +155,7 @@ import UIKit
         otpField.backgroundColor = defaultBackgroundColor
         
         // Finally create the fields
-        otpField.initalizeUI(forFieldType: displayType)
+        otpField.initalizeUI(forFieldType: displayType,forFieldRadius: fieldBorderRadius)
         
         return otpField
     }

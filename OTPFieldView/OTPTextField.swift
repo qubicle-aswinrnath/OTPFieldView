@@ -52,13 +52,13 @@ import UIKit
         super.init(coder: aDecoder)
     }
     
-    public func initalizeUI(forFieldType type: DisplayType) {
+    public func initalizeUI(forFieldType type: DisplayType, forFieldRadius radius: CGFloat) {
         switch type {
         case .circular:
             layer.cornerRadius = bounds.size.width / 2
             break
         case .roundedCorner:
-            layer.cornerRadius = bounds.size.width / 3.5
+            layer.cornerRadius = radius
             break
         case .square:
             layer.cornerRadius = 0
