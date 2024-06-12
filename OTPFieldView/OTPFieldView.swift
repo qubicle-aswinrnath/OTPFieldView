@@ -69,7 +69,7 @@ import UIKit
     fileprivate func initializeOTPFields() {
         secureEntryData.removeAll()
         
-        for index in stride(from: 0, to: fieldsCount, by: 1) {
+        for index in 0..<fieldsCount {
             let oldOtpField = viewWithTag(index + 1) as? OTPTextField
             oldOtpField?.removeFromSuperview()
             
@@ -81,15 +81,13 @@ import UIKit
     }
     
     fileprivate func getOTPField(forIndex index: Int) -> OTPTextField {
-        let totalFieldWidth = fieldSize + 8
-        let totalFieldsWidth = totalFieldWidth * CGFloat(fieldsCount)
-        let remainingSpace = bounds.size.width - totalFieldsWidth
-        let separatorSpace = remainingSpace / CGFloat(fieldsCount - 1)
+        let totalWidth = bounds.size.width
+        let fieldWidth = (totalWidth - (CGFloat(fieldsCount - 1) * 8)) / CGFloat(fieldsCount)
         
         let fieldFrame = CGRect(
-            x: CGFloat(index) * (totalFieldWidth + separatorSpace),
+            x: CGFloat(index) * (fieldWidth + 8),
             y: (bounds.size.height - fieldSize) / 2,
-            width: totalFieldWidth,
+            width: fieldWidth,
             height: fieldSize
         )
         
@@ -122,7 +120,7 @@ import UIKit
         var nextOTPField: UITextField?
         
         if !shouldAllowIntermediateEditing {
-            for index in stride(from: 1, to: fieldsCount + 1, by: 1) {
+            for index in 1...fieldsCount {
                 let tempNextOTPField = viewWithTag(index) as? UITextField
                 
                 if let tempNextOTPFieldText = tempNextOTPField?.text, tempNextOTPFieldText.isEmpty {
@@ -143,7 +141,7 @@ import UIKit
         if isDeleted {
             _ = delegate?.hasEnteredAllOTP(hasEnteredAll: false)
             
-            for index in stride(from: 0, to: fieldsCount, by: 1) {
+            for index in 0..<fieldsCount {
                 var otpField = viewWithTag(index + 1) as? OTPTextField
                 
                 if otpField == nil {
@@ -164,7 +162,7 @@ import UIKit
         } else {
             var enteredOTPString = ""
             
-            for index in stride(from: 0, to: secureEntryData.count, by: 1) {
+            for index in 0..<secureEntryData.count {
                 if !secureEntryData[index].isEmpty {
                     enteredOTPString.append(secureEntryData[index])
                 }
@@ -175,7 +173,7 @@ import UIKit
                 
                 let isValid = delegate?.hasEnteredAllOTP(hasEnteredAll: (enteredOTPString.count == fieldsCount)) ?? false
                 
-                for index in stride(from: 0, to: fieldsCount, by: 1) {
+                for index in 0..<fieldsCount {
                     var otpField = viewWithTag(index + 1) as? OTPTextField
                     
                     if otpField == nil {
